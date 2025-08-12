@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String?
+  role      Role     @default(MEMBER)
+  teams     TeamMember[]
+  updates   ProgressUpdate[]
+}
+
+model Team {
+  id         String       @id @default(uuid())
+  name       String
+  members    TeamMember[]
+  objectives Objective[]
+}
+
+model TeamMember {
+  id      String  @id @default(uuid())
+  teamId  String
+  userId  String
+  role    TeamRole
+  team    Team   @relation(fields: [teamId], references: [id])
+  user    User   @relation(fields: [userId], references: [id])
+}
+
+model Objective {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  teamId      String
+  startDate   DateTime
+  endDate     DateTime
+  dueDate     DateTime
+  status      Status
+  team        Team         @relation(fields: [teamId], references: [id])
+  keyResults  KeyResult[]
+}
+
+model KeyResult {
+  id          String       @id @default(uuid())
+  title       String
+  targetValue Float
+  currentValue Float
+  objectiveId String
+  objective   Objective    @relation(fields: [objectiveId], references: [id])
+  updates     ProgressUpdate[]
+  dueDate     DateTime
+  progress    Int         @default(0)
+}
+
+model ProgressUpdate {
+  id          String   @id @default(uuid())
+  keyResultId String
+  userId      String
+  newValue    Float
+  comment     String?
+  createdAt   DateTime @default(now())
+  keyResult   KeyResult @relation(fields: [keyResultId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum TeamRole {
+  MANAGER
+  MEMBER
+}
+
+enum Status {
+  ON_TRACK
+  AT_RISK
+  OFF_TRACK
+}
