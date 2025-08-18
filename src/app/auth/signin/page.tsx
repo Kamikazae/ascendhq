@@ -1,4 +1,3 @@
-
 "use client";
 
 import { getCsrfToken, signIn } from "next-auth/react";
@@ -18,11 +17,28 @@ export default function SignIn() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn("credentials", {
+
+    const res = await signIn("credentials", {
       email,
       password,
-      callbackUrl: "/dashboard",
+      redirect: false, // <-- disable auto redirect so we can handle it
     });
+
+    if (res?.ok) {
+      // Fetch session to know role
+      const sessionRes = await fetch("/api/auth/session");
+      const session = await sessionRes.json();
+
+      if (session?.user?.role === "ADMIN") {
+        window.location.href = "/admin/dashboard";
+      } else if (session?.user?.role === "MANAGER") {
+        window.location.href = "/manager/dashboard";
+      } else {
+        window.location.href = "/dashboard"; // fallback
+      }
+    } else {
+      alert("Invalid email or password");
+    }
   };
 
   return (

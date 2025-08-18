@@ -1,8 +1,15 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import {prisma} from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { compare } from "bcryptjs";
+
+// Central mapping for role-based landing pages
+const ROLE_REDIRECTS = {
+  ADMIN: "/admin/dashboard",
+  MANAGER: "/manager/dashboard",
+  MEMBER: "/member/dashboard"
+};
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -31,22 +38,27 @@ export const authOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt({ token, user }: { token: any; user?: any }) {
+    async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       if (session.user) {
         session.user.role = token.role;
-        session.user.id = token.sub; // Ensure user ID is available in session
+        session.user.id = token.sub;
       }
       return session;
+    },
+    async redirect({ baseUrl, token }) {
+      // token contains the role we added in jwt()
+      const role = token?.role as keyof typeof ROLE_REDIRECTS | undefined;
+      const path = role && role in ROLE_REDIRECTS ? ROLE_REDIRECTS[role] : "/";
+      return `${baseUrl}${path}`;
     }
-  }
+  },
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };

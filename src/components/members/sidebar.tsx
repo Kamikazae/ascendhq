@@ -8,12 +8,9 @@ import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-   { label: "Manage Teams", href: "/admin/teams", icon: Users },
-  { label: "Manage Managers", href: "/admin/manage-managers", icon: UserCog },
-  { label: "Manage Members", href: "/admin/manage-members", icon: Users },
-
-
+  { label: "Dashboard", href: "/manager/dashboard", icon: LayoutDashboard },
+   { label: "Manage members", href: "/manager/members", icon: Users },
+  { label: "Manage Objectives", href: "/manager/objectives", icon: UserCog },
 ];
 
 export function Sidebar({ role }: { role: string }) {

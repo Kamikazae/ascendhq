@@ -1,21 +1,20 @@
-// app/layout.tsx
 import "./globals.css";
-import {Sidebar} from "@/components/sidebar";
-import { getServerSession } from "next-auth";
-import { authOptions } from "./api/auth/[...nextauth]/route";
+import type { Metadata } from "next";
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
+export const metadata: Metadata = {
+  title: "My App",
+  description: "Role-based dashboard application",
+};
 
-  const isLoggedIn = !!session;
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body className="flex min-h-screen">
-        {isLoggedIn && <Sidebar role="ADMIN" />}
-        <main className={isLoggedIn ? "flex-1 p-4" : "w-full"}>
-          {children}
-        </main>
+      <body>
+        {children}
       </body>
     </html>
   );

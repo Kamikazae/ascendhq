@@ -1,21 +1,31 @@
 "use client";
-
 import * as React from "react";
 
 interface CircularProgressProps {
-  value: number; // 0 to 100
+  value?: number;
   size?: number;
   strokeWidth?: number;
 }
 
 export function CircularProgress({
-  value,
+  value = 0,
   size = 100,
   strokeWidth = 10,
 }: CircularProgressProps) {
+  const safeValue = Math.min(Math.max(Number(value) || 0, 0), 100);
+
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
+
+  const [offset, setOffset] = React.useState(
+    circumference - (safeValue / 100) * circumference
+  );
+
+  React.useEffect(() => {
+    const progressOffset =
+      circumference - (safeValue / 100) * circumference;
+    setOffset(progressOffset);
+  }, [safeValue, circumference]);
 
   return (
     <svg width={size} height={size} className="rotate-[-90deg]">
@@ -38,7 +48,7 @@ export function CircularProgress({
         cx={size / 2}
         cy={size / 2}
         style={{
-          transition: "stroke-dashoffset 0.35s",
+          transition: "stroke-dashoffset 0.5s ease",
         }}
       />
       <text
@@ -48,7 +58,7 @@ export function CircularProgress({
         textAnchor="middle"
         className="fill-current text-lg font-semibold rotate-[90deg]"
       >
-        {value}%
+        {safeValue}%
       </text>
     </svg>
   );

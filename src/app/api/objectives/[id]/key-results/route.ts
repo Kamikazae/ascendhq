@@ -5,13 +5,15 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { title } = await req.json();
+  const { title, targetValue, currentValue, dueDate } = await req.json();
   const keyResult = await prisma.keyResult.create({
     data: {
       title,
       progress: 0,
       objectiveId: params.id,
-      dueDate: new Date(), // Default to current date, can be updated later
+      targetValue,
+      currentValue,
+      dueDate,
     },
   });
   return NextResponse.json(keyResult);
