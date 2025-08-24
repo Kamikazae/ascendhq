@@ -16,6 +16,7 @@ export default function DashboardPage() {
     async function fetchData() {
       const res = await fetch("/api/dashboard");
       const json = await res.json();
+      console.log("Dashboard data:", json);
       setData(json);
       setLoading(false);
     }

@@ -38,13 +38,13 @@ export const authOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: any; user?: { role?: string } }) {
       if (user) {
         token.role = user.role;
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: { role?: string; sub?: string } }) {
       if (session.user) {
         session.user.role = token.role;
         session.user.id = token.sub;

@@ -1,8 +1,5 @@
-"use client";
-
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +12,7 @@ interface Props {
 }
 
 export default async function TeamPage({ params }: Props) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
 
   if (!session) {
     return <p className="p-4">You must be signed in to view this team.</p>;
@@ -36,9 +33,7 @@ export default async function TeamPage({ params }: Props) {
   // Calculate completion for each objective
   const objectivesWithCompletion = team.objectives.map((obj) => {
     const total = obj.keyResults.length;
-    const completed = obj.keyResults.filter(
-      (kr) => kr.progress === 100
-    ).length;
+    const completed = obj.keyResults.filter((kr) => kr.progress === 100).length;
     const completion = total > 0 ? Math.round((completed / total) * 100) : 0;
     return { ...obj, completion };
   });

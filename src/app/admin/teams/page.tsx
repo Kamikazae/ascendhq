@@ -93,7 +93,7 @@ export default function TeamsPage() {
               </p>
 
               <Link
-                href={`/teams/${team.id}`}
+                href={`/admin/teams/${team.id}`}
                 className="mt-4 text-primary hover:underline text-sm"
               >
                 View Team
