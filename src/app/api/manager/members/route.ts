@@ -1,17 +1,22 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // adjust path to your NextAuth config
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { requireAuth, requireManager } from "@/lib/auth-utils";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || !session.user || session.user.role !== "MANAGER") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!requireAuth(session)) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const managerId = session.user.id;
+    if (!requireManager(session)) {
+      return NextResponse.json({ error: "Manager access required" }, { status: 403 });
+    }
+
+    const managerId = session!.user.id;
 
     // Get all teams managed by this manager
     const managedTeams = await prisma.teamMember.findMany({
