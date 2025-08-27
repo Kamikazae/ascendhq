@@ -10,19 +10,25 @@ const ROLE_REDIRECTS: Record<UserRole, string> = {
 
 export default withAuth(
   function middleware(req: NextRequestWithAuth) {
-    const url = req.nextUrl;
-    const token = req.nextauth.token;
+    try {
+      const url = req.nextUrl;
+      const token = req.nextauth?.token;
 
-    // When hitting `/`, redirect based on role
-    if (url.pathname === "/") {
-      if (token?.role && token.role in ROLE_REDIRECTS) {
-        return NextResponse.redirect(new URL(ROLE_REDIRECTS[token.role as UserRole], req.url));
+      // When hitting `/`, redirect based on role
+      if (url.pathname === "/") {
+        if (token?.role && token.role in ROLE_REDIRECTS) {
+          return NextResponse.redirect(new URL(ROLE_REDIRECTS[token.role as UserRole], req.url));
+        }
+        // if not logged in → signin
+        return NextResponse.redirect(new URL("/auth/signin", req.url));
       }
-      // if not logged in → signin
+
+      return NextResponse.next();
+    } catch (error) {
+      console.error("Middleware error:", error);
+      // Fallback to signin on any error
       return NextResponse.redirect(new URL("/auth/signin", req.url));
     }
-
-    return NextResponse.next();
   },
   {
     callbacks: {
@@ -50,6 +56,5 @@ export const config = {
     "/admin/:path*",
     "/manager/:path*",
     "/member/:path*",
-    "/api/:path*",
   ],
 };
