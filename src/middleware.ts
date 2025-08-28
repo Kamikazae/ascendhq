@@ -1,5 +1,6 @@
-import { withAuth, NextRequestWithAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { UserRole } from "../types/auth";
 
 const ROLE_REDIRECTS: Record<UserRole, string> = {
@@ -8,53 +9,29 @@ const ROLE_REDIRECTS: Record<UserRole, string> = {
   MEMBER: "/member/dashboard",
 };
 
-export default withAuth(
-  function middleware(req: NextRequestWithAuth) {
-    try {
-      const url = req.nextUrl;
-      const token = req.nextauth?.token;
+export async function middleware(req: NextRequest) {
+  const url = req.nextUrl;
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-      // When hitting `/`, redirect based on role
-      if (url.pathname === "/") {
-        if (token?.role && token.role in ROLE_REDIRECTS) {
-          return NextResponse.redirect(new URL(ROLE_REDIRECTS[token.role as UserRole], req.url));
-        }
-        // if not logged in → signin
-        return NextResponse.redirect(new URL("/auth/signin", req.url));
-      }
-
-      return NextResponse.next();
-    } catch (error) {
-      console.error("Middleware error:", error);
-      // Fallback to signin on any error
+  // Not logged in → go to signin
+  if (!token) {
+    if (url.pathname !== "/auth/signin") {
       return NextResponse.redirect(new URL("/auth/signin", req.url));
     }
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        const url = req.nextUrl;
-
-        // Allow API routes
-        if (url.pathname.startsWith("/api")) return true;
-
-        // Block if no token and not already on signin
-        if (!token?.role && url.pathname !== "/auth/signin") return false;
-
-        return true;
-      },
-    },
-    pages: {
-      signIn: "/auth/signin",
-    },
+    return NextResponse.next();
   }
-);
+
+  // If hitting `/`, redirect based on role
+  if (url.pathname === "/") {
+    const role = token.role as UserRole | undefined;
+    if (role && role in ROLE_REDIRECTS) {
+      return NextResponse.redirect(new URL(ROLE_REDIRECTS[role], req.url));
+    }
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: [
-    "/",
-    "/admin/:path*",
-    "/manager/:path*",
-    "/member/:path*",
-  ],
+  matcher: ["/", "/admin/:path*", "/manager/:path*", "/member/:path*"],
 };
