@@ -65,6 +65,3 @@ export const config = {
   ],
 };
 
-// Explicitly set runtime for Edge compatibility
-export const runtime = 'edge';
-
