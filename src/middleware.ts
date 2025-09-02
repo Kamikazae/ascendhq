@@ -1,12 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
-
-// Inline the roles instead of importing from ../types
-const ROLE_REDIRECTS: Record<"ADMIN" | "MANAGER" | "MEMBER", string> = {
-  ADMIN: "/admin/dashboard",
-  MANAGER: "/manager/dashboard",
-  MEMBER: "/member/dashboard",
-};
 
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
@@ -28,35 +20,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  try {
-    // Get the token using next-auth/jwt which is Edge Runtime compatible
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: process.env.NEXTAUTH_URL?.startsWith("https://") ?? false
-    });
-
-    // Root redirect by role
-    if (url.pathname === "/") {
-      if (token?.role && token.role in ROLE_REDIRECTS) {
-        return NextResponse.redirect(
-          new URL(ROLE_REDIRECTS[token.role as "ADMIN" | "MANAGER" | "MEMBER"], request.url)
-        );
-      }
-      return NextResponse.redirect(new URL("/auth/signin", request.url));
-    }
-
-    // Protect all other matched routes
-    if (!token) {
-      return NextResponse.redirect(new URL("/auth/signin", request.url));
-    }
-
-    return NextResponse.next();
-  } catch (error) {
-    console.error("Middleware error:", error);
-    // Fallback to signin on any error
+  // For now, just redirect all protected routes to signin
+  // This eliminates the __dirname issue while we debug
+  if (url.pathname === "/") {
     return NextResponse.redirect(new URL("/auth/signin", request.url));
   }
+
+  // Redirect all other protected routes to signin for now
+  return NextResponse.redirect(new URL("/auth/signin", request.url));
 }
 
 export const config = {
