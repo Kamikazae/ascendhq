@@ -16,7 +16,14 @@ export async function middleware(request: NextRequest) {
     url.pathname.startsWith("/auth") ||
     url.pathname.startsWith("/api") ||
     url.pathname.startsWith("/_next") ||
-    url.pathname === "/favicon.ico"
+    url.pathname.includes("/favicon") ||
+    url.pathname.endsWith(".ico") ||
+    url.pathname.endsWith(".png") ||
+    url.pathname.endsWith(".jpg") ||
+    url.pathname.endsWith(".jpeg") ||
+    url.pathname.endsWith(".svg") ||
+    url.pathname.endsWith(".gif") ||
+    url.pathname.endsWith(".webp")
   ) {
     return NextResponse.next();
   }
@@ -25,7 +32,8 @@ export async function middleware(request: NextRequest) {
     // Get the token using next-auth/jwt which is Edge Runtime compatible
     const token = await getToken({
       req: request,
-      secret: process.env.NEXTAUTH_SECRET
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: process.env.NEXTAUTH_URL?.startsWith("https://") ?? false
     });
 
     // Root redirect by role
@@ -56,12 +64,11 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * - _next (Next.js internals)
+     * - favicon and other static assets
      * - auth (auth pages)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|auth).*)",
+    "/((?!api|_next|favicon|.*\\.(ico|png|jpg|jpeg|svg|gif|webp)|auth).*)",
   ],
 };
 
