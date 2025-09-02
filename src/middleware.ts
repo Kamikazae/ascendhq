@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
@@ -20,14 +21,49 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // For now, just redirect all protected routes to signin
-  // This eliminates the __dirname issue while we debug
-  if (url.pathname === "/") {
+  // Get the token to check authentication
+  const token = await getToken({ 
+    req: request, 
+    secret: process.env.NEXTAUTH_SECRET 
+  });
+
+  // If no token (not authenticated), redirect to signin
+  if (!token) {
     return NextResponse.redirect(new URL("/auth/signin", request.url));
   }
 
-  // Redirect all other protected routes to signin for now
-  return NextResponse.redirect(new URL("/auth/signin", request.url));
+  // Handle role-based routing for authenticated users
+  const userRole = token.role as string;
+  
+  // Root path - redirect based on role
+  if (url.pathname === "/") {
+    switch (userRole) {
+      case "ADMIN":
+        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+      case "MANAGER":
+        return NextResponse.redirect(new URL("/manager/dashboard", request.url));
+      case "MEMBER":
+        return NextResponse.redirect(new URL("/member/dashboard", request.url));
+      default:
+        return NextResponse.redirect(new URL("/auth/signin", request.url));
+    }
+  }
+
+  // Check role-based access for protected routes
+  if (url.pathname.startsWith("/admin") && userRole !== "ADMIN") {
+    return NextResponse.redirect(new URL("/auth/signin", request.url));
+  }
+  
+  if (url.pathname.startsWith("/manager") && !["ADMIN", "MANAGER"].includes(userRole)) {
+    return NextResponse.redirect(new URL("/auth/signin", request.url));
+  }
+  
+  if (url.pathname.startsWith("/member") && !["ADMIN", "MANAGER", "MEMBER"].includes(userRole)) {
+    return NextResponse.redirect(new URL("/auth/signin", request.url));
+  }
+
+  // Allow access to the route
+  return NextResponse.next();
 }
 
 export const config = {

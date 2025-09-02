@@ -29,7 +29,7 @@ import {
 const demoAccounts = [
   {
     role: "Admin",
-    email: "admin@ascendhq.com",
+    email: "admin@example.com",
     icon: Crown,
     color: "text-purple-600",
     bgColor: "bg-purple-50",
@@ -38,7 +38,7 @@ const demoAccounts = [
   },
   {
     role: "Manager",
-    email: "manager@ascendhq.com", 
+    email: "manager@manager.com", 
     icon: Shield,
     color: "text-green-600",
     bgColor: "bg-green-50",
@@ -47,7 +47,7 @@ const demoAccounts = [
   },
   {
     role: "Member",
-    email: "member@ascendhq.com",
+    email: "member1@example.com",
     icon: User,
     color: "text-blue-600",
     bgColor: "bg-blue-50",
@@ -126,7 +126,7 @@ export default function SignIn() {
 
   const handleDemoLogin = (demoEmail: string) => {
     setEmail(demoEmail);
-    setPassword("demo123");
+    setPassword("password123");
   };
 
   return (
